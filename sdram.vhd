@@ -46,6 +46,7 @@ entity sdram is
     SDRAM_COL_WIDTH  : natural := 9;
     SDRAM_ROW_WIDTH  : natural := 13;
     SDRAM_BANK_WIDTH : natural := 2;
+    SDRAM_DQM_WIDTH  : natural := 2;
 
     -- The delay in clock cycles, between the start of a read command and the
     -- availability of the output data.
@@ -105,8 +106,7 @@ entity sdram is
     sdram_ras_n : out std_logic;
     sdram_cas_n : out std_logic;
     sdram_we_n  : out std_logic;
-    sdram_dqml  : out std_logic;
-    sdram_dqmh  : out std_logic
+    sdram_dqm   : out std_logic_vector(SDRAM_DQM_WIDTH-1 downto 0)
   );
 end sdram;
 
@@ -129,6 +129,17 @@ architecture arch of sdram is
 
   -- the write burst mode enables bursting for write operations
   constant WRITE_BURST_MODE : std_logic := '0'; -- 0=burst, 1=single
+
+  FUNCTION ilog2 (CONSTANT v : natural) RETURN natural IS
+    VARIABLE r : natural := 1;
+    VARIABLE n : natural := 0;
+  BEGIN
+    WHILE v>r LOOP
+      n:=n+1;
+      r:=r*2;
+    END LOOP;
+    RETURN n;
+  END FUNCTION ilog2;
 
   -- the value written to the mode register to configure the memory
   constant MODE_REG : unsigned(SDRAM_ADDR_WIDTH-1 downto 0) := (
@@ -419,9 +430,20 @@ begin
       (others => '0') when others;
 
   -- decode the next 16-bit word from the write buffer
-  sdram_dq <= data_reg((BURST_LENGTH-wait_counter)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-wait_counter-1)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
+  --sdram_dq <= data_reg((BURST_LENGTH-wait_counter)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-wait_counter-1)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
+  B_data_mux: block
+    type T_mux_sdram_dq is array (0 to BURST_LENGTH-1) of std_logic_vector(SDRAM_DATA_WIDTH-1 downto 0);
+    signal S_mux_sdram_dq: T_mux_sdram_dq;
+    signal addr_wait_counter: unsigned(ilog2(BURST_LENGTH)-1 downto 0);
+  begin
+    G_mux_sdram_dq: for i in 0 to BURST_LENGTH-1 generate
+      S_mux_sdram_dq(i) <= data_reg((BURST_LENGTH-i)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-i-1)*SDRAM_DATA_WIDTH);
+    end generate;
+    addr_wait_counter <= to_unsigned(wait_counter, addr_wait_counter'length);
+    sdram_dq <= S_mux_sdram_dq(to_integer(addr_wait_counter)) when state = WRITE else (others => 'Z');
+  end block;
 
   -- set SDRAM data mask
-  sdram_dqmh <= '0';
-  sdram_dqml <= '0';
+  sdram_dqm <= (others => '0'); -- all bytes enabled
+
 end architecture arch;
