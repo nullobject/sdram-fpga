@@ -23,8 +23,6 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 
-use work.common.all;
-
 -- This SDRAM controller provides a symmetric 32-bit synchronous read/write
 -- interface for a 16Mx16-bit SDRAM chip (e.g. AS4C16M16SA-6TCN, IS42S16400F,
 -- etc.).
@@ -111,6 +109,11 @@ entity sdram is
 end sdram;
 
 architecture arch of sdram is
+  function ilog2(n : natural) return natural is
+  begin
+    return natural(ceil(log2(real(n))));
+  end ilog2;
+
   subtype command_t is std_logic_vector(3 downto 0);
 
   -- commands
