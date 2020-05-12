@@ -1,4 +1,19 @@
--- Copyright (c) 2019 Josh Bassett
+--   __   __     __  __     __         __
+--  /\ "-.\ \   /\ \/\ \   /\ \       /\ \
+--  \ \ \-.  \  \ \ \_\ \  \ \ \____  \ \ \____
+--   \ \_\\"\_\  \ \_____\  \ \_____\  \ \_____\
+--    \/_/ \/_/   \/_____/   \/_____/   \/_____/
+--   ______     ______       __     ______     ______     ______
+--  /\  __ \   /\  == \     /\ \   /\  ___\   /\  ___\   /\__  _\
+--  \ \ \/\ \  \ \  __<    _\_\ \  \ \  __\   \ \ \____  \/_/\ \/
+--   \ \_____\  \ \_____\ /\_____\  \ \_____\  \ \_____\    \ \_\
+--    \/_____/   \/_____/ \/_____/   \/_____/   \/_____/     \/_/
+--
+-- https://joshbassett.info
+-- https://twitter.com/nullobject
+-- https://github.com/nullobject
+--
+-- Copyright (c) 2020 Josh Bassett
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
 -- of this software and associated documentation files (the "Software"), to deal
