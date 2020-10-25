@@ -149,8 +149,7 @@ architecture arch of sdram is
   constant WRITE_BURST_MODE : std_logic := '0'; -- 0=burst, 1=single
 
   -- the value written to the mode register to configure the memory
-  constant MODE_REG : unsigned(SDRAM_ADDR_WIDTH-1 downto 0) := (
-    "000" &
+  constant MODE_REG : unsigned(10-1 downto 0) := (
     WRITE_BURST_MODE &
     "00" &
     to_unsigned(CAS_LATENCY, 3) &
@@ -190,6 +189,9 @@ architecture arch of sdram is
   -- the SDRAM
   constant REFRESH_INTERVAL : natural := natural(floor(T_REFI/CLK_PERIOD))-10;
 
+  -- the maximum value of the wait counter
+  constant WAIT_COUNTER_MAX : natural := INIT_WAIT+PRECHARGE_WAIT+REFRESH_WAIT+REFRESH_WAIT;
+
   type state_t is (INIT, MODE, IDLE, ACTIVE, READ, WRITE, REFRESH);
 
   -- state signals
@@ -209,8 +211,8 @@ architecture arch of sdram is
   signal should_refresh : std_logic;
 
   -- counters
-  signal wait_counter    : natural range 0 to 16383;
-  signal refresh_counter : natural range 0 to 1023;
+  signal wait_counter    : natural range 0 to WAIT_COUNTER_MAX+32;
+  signal refresh_counter : natural range 0 to REFRESH_INTERVAL+32;
 
   -- registers
   signal addr_reg : unsigned(SDRAM_COL_WIDTH+SDRAM_ROW_WIDTH+SDRAM_BANK_WIDTH-1 downto 0);
@@ -429,12 +431,12 @@ begin
   -- set SDRAM address
   with state select
     sdram_a <=
-      "0010000000000" when INIT,
-      MODE_REG        when MODE,
-      row             when ACTIVE,
-      "0010" & col    when READ,   -- auto precharge
-      "0010" & col    when WRITE,  -- auto precharge
-      (others => '0') when others;
+      to_unsigned(1024,SDRAM_ADDR_WIDTH)  when INIT, -- 1024 => A10=1, others=0
+      resize(MODE_REG,SDRAM_ADDR_WIDTH)   when MODE,
+      row                                 when ACTIVE,
+      resize(col,SDRAM_ADDR_WIDTH) + 1024 when READ,   -- auto precharge
+      resize(col,SDRAM_ADDR_WIDTH) + 1024 when WRITE,  -- auto precharge
+      (others => '0')                     when others;
 
   -- decode the next 16-bit word from the write buffer
   sdram_dq <= data_reg((BURST_LENGTH-wait_counter)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-wait_counter-1)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
