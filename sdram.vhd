@@ -445,6 +445,24 @@ begin
   sdram_dq <= data_reg((BURST_LENGTH-wait_counter)*SDRAM_DATA_WIDTH-1 downto (BURST_LENGTH-wait_counter-1)*SDRAM_DATA_WIDTH) when state = WRITE else (others => 'Z');
 
   -- set SDRAM data mask
-  sdram_dqmh <= mask_reg(3) when (wait_counter = 0) else mask_reg(1);
-  sdram_dqml <= mask_reg(2) when (wait_counter = 0) else mask_reg(0);
+  --sdram_dqmh <= mask_reg(3) when (wait_counter = 0) else mask_reg(1);
+  --sdram_dqml <= mask_reg(2) when (wait_counter = 0) else mask_reg(0);
+
+
+  process (state, wait_counter)
+  begin
+    if (state = WRITE) then
+      if (wait_counter = 0) then
+        sdram_dqmh <= mask_reg(3);
+        sdram_dqml <= mask_reg(2);
+      else
+        sdram_dqmh <= mask_reg(1);
+        sdram_dqml <= mask_reg(0);
+      end if;
+    else
+      sdram_dqmh <= '0';
+      sdram_dqml <= '0';
+    end if;
+  end process;
+
 end architecture arch;
