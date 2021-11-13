@@ -449,7 +449,7 @@ begin
   --sdram_dqml <= mask_reg(2) when (wait_counter = 0) else mask_reg(0);
 
 
-  process (state, wait_counter)
+  process (state, wait_counter, mask_reg)
   begin
     if (state = WRITE) then
       if (wait_counter = 0) then
